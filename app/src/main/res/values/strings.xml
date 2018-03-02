@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ELE_SMS_AJAY_CHAUHAN</string>
+    <string name="permission_denied">Permission denied to read your Messages</string>
 </resources>

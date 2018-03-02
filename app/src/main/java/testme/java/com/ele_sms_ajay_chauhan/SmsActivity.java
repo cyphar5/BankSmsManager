@@ -4,30 +4,30 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
-import android.support.constraint.ConstraintLayout;
-
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
+import testme.java.com.ele_sms_ajay_chauhan.component.SmsComponent;
 
-public class SmsActivity extends AppCompatActivity {
+public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
     @BindView(R.id.text)
     TextView textView;
 
-    Cursor cursor;
+    private Cursor cursor;
+    private SmsComponent smsComponent;
+
+    @Inject
+    SmsPresenter smsPresenter;
 
 
     @Override
@@ -36,6 +36,9 @@ public class SmsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sms);
         ButterKnife.bind(this);
 
+        BaseApplication.application.getSmsComponent().inject(SmsActivity.this);
+
+        smsPresenter.setView(this);
         requestPermissions();
 
     }
@@ -60,11 +63,11 @@ public class SmsActivity extends AppCompatActivity {
 
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
                     readMessages();
 
                 } else {
-                    Toast.makeText(this, "Permission denied to read your Messages", Toast.LENGTH_SHORT).show();
+                    textView.setText(getString(R.string.permission_denied));
+                    Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -79,13 +82,13 @@ public class SmsActivity extends AppCompatActivity {
             cursor.getColumnCount();
             do {
                 String msgData = "";
-                for (int idx = 0; idx < cursor.getColumnCount(); idx++) {
-                    msgData += " " + cursor.getColumnName(idx) + ":" + cursor.getString(idx);
-                    textView.setText(msgData);
+                for (int id = 0; id < cursor.getColumnCount(); id++) {
+                    msgData += " " + cursor.getColumnName(id) + ":" + cursor.getString(id);
+                    textView.append(msgData);
                 }
             } while (cursor.moveToNext());
         } else {
-
+            Log.e(getClass().toString(), "Cursor Loading Failed");
         }
     }
 
@@ -96,4 +99,8 @@ public class SmsActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void displayMessages() {
+
+    }
 }
