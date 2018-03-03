@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,11 +17,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import testme.java.com.ele_sms_ajay_chauhan.model.SmsModel;
 import testme.java.com.ele_sms_ajay_chauhan.utility.SmsBodyParser;
+import testme.java.com.ele_sms_ajay_chauhan.utility.Util;
 
 public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
@@ -29,7 +30,7 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
     private Cursor cursor;
     private List<SmsModel> smsList = new LinkedList<>();
-    private SmsMvpPresenter smsPresenter ;
+    private SmsPresenter smsPresenter = new SmsPresenter();
 
 
     @Override
@@ -63,7 +64,7 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    readMessages();
+                    //   readMessages();
 
                 } else {
                     textView.setText(getString(R.string.permission_denied));
@@ -74,7 +75,7 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
         }
     }
 
-    private void readMessages() {
+    public void readMessages(View v) {
 
         cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
 
@@ -82,15 +83,14 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
             cursor.getColumnCount();
             do {
                 String body = "";
-                for (int id = 0; id < cursor.getColumnCount(); id++) {
-                    body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
-                    boolean isMatchFound = SmsBodyParser.isMatchFind(body);
-                    if (isMatchFound) {
-                        SmsModel sms = new SmsModel();
-                        sms.setId(cursor.getString(cursor.getColumnIndexOrThrow("_id")));
-                        sms.setReceivedTime(cursor.getString(cursor.getColumnIndexOrThrow("date")));
-
-                    }
+                body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
+                boolean isMatchFound = SmsBodyParser.isMatchFind(body);
+                if (isMatchFound) {
+                    SmsModel sms = new SmsModel();
+                    sms.setId(cursor.getString(cursor.getColumnIndexOrThrow("address")));
+                    sms.setReceivedTime(cursor.getString(cursor.getColumnIndexOrThrow("date")));
+                    sms.setAmount(SmsBodyParser.getAmount(body));
+                    sms.setCard_number(SmsBodyParser.getCard(body));
 
 
                 }
