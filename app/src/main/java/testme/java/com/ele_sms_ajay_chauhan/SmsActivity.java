@@ -12,11 +12,15 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import javax.inject.Inject;
+import java.util.LinkedList;
+import java.util.List;
+
+
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import testme.java.com.ele_sms_ajay_chauhan.component.SmsComponent;
+import testme.java.com.ele_sms_ajay_chauhan.model.SmsModel;
+import testme.java.com.ele_sms_ajay_chauhan.utility.SmsBodyParser;
 
 public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
@@ -24,10 +28,8 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
     TextView textView;
 
     private Cursor cursor;
-    private SmsComponent smsComponent;
-
-    @Inject
-    SmsPresenter smsPresenter;
+    private List<SmsModel> smsList = new LinkedList<>();
+    private SmsMvpPresenter smsPresenter ;
 
 
     @Override
@@ -35,8 +37,6 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sms);
         ButterKnife.bind(this);
-
-        BaseApplication.application.getSmsComponent().inject(SmsActivity.this);
 
         smsPresenter.setView(this);
         requestPermissions();
@@ -81,10 +81,18 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
         if (cursor != null && cursor.moveToFirst()) {
             cursor.getColumnCount();
             do {
-                String msgData = "";
+                String body = "";
                 for (int id = 0; id < cursor.getColumnCount(); id++) {
-                    msgData += " " + cursor.getColumnName(id) + ":" + cursor.getString(id);
-                    textView.append(msgData);
+                    body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
+                    boolean isMatchFound = SmsBodyParser.isMatchFind(body);
+                    if (isMatchFound) {
+                        SmsModel sms = new SmsModel();
+                        sms.setId(cursor.getString(cursor.getColumnIndexOrThrow("_id")));
+                        sms.setReceivedTime(cursor.getString(cursor.getColumnIndexOrThrow("date")));
+
+                    }
+
+
                 }
             } while (cursor.moveToNext());
         } else {

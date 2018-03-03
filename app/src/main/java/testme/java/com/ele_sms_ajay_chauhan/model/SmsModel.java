@@ -14,6 +14,10 @@ public class SmsModel implements Parcelable {
     private String transactionTime;
     private String receivedTime;
 
+    public SmsModel(){
+
+    }
+
     protected SmsModel(Parcel in) {
         id = in.readString();
         amount = in.readString();
