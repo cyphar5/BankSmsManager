@@ -9,12 +9,14 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import testme.java.com.ele_sms_ajay_chauhan.R;
 import testme.java.com.ele_sms_ajay_chauhan.model.SmsModel;
 import testme.java.com.ele_sms_ajay_chauhan.utility.Util;
+import testme.java.com.ele_sms_ajay_chauhan.utility.comparator.SmsComparator;
 
 /**
  * Created by achau on 02-03-2018.
@@ -40,7 +42,7 @@ public class SmsAdapter extends RecyclerView.Adapter<SmsAdapter.SmsViewHolder> {
 
     @Override
     public void onBindViewHolder(SmsAdapter.SmsViewHolder holder, int position) {
-        SmsModel sms = smsList.get(smsList.size()-position-1);
+        SmsModel sms = smsList.get(smsList.size() - position - 1);
         holder.setSmsData(sms, position + 1);
     }
 
@@ -66,7 +68,7 @@ public class SmsAdapter extends RecyclerView.Adapter<SmsAdapter.SmsViewHolder> {
         }
 
         private void setSmsData(SmsModel smsModel, int index) {
-            sNo.setText("" + index+".");
+            sNo.setText("" + index + ".");
             id.setText(smsModel.getId());
             cardNo.setText(smsModel.getCard_number());
             amount.setText(smsModel.getAmount());
@@ -79,6 +81,7 @@ public class SmsAdapter extends RecyclerView.Adapter<SmsAdapter.SmsViewHolder> {
     public void setItems(List<SmsModel> items) {
         if (items != null) {
             smsList.clear();
+            Collections.sort(items, new SmsComparator());
             smsList.addAll(items);
             notifyDataSetChanged();
         }

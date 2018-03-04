@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +12,8 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,7 +26,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import testme.java.com.ele_sms_ajay_chauhan.adapter.SmsAdapter;
 import testme.java.com.ele_sms_ajay_chauhan.model.SmsModel;
-import testme.java.com.ele_sms_ajay_chauhan.utility.SmsBodyParser;
+import testme.java.com.ele_sms_ajay_chauhan.utility.Util;
 
 public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
@@ -32,29 +35,34 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
     @BindView(R.id.text_permission)
     TextView textPermission;
 
-    private Cursor cursor;
-    private List<SmsModel> smsList = new LinkedList<>();
-    private SmsPresenter smsPresenter = new SmsPresenter();
+    //private Cursor cursor;
+    private SmsPresenter smsPresenter;
     private SmsAdapter smsAdapter;
+
+    public SmsActivity() {
+        smsPresenter = new SmsPresenter(SmsActivity.this);
+    }
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sms);
+
+        Util.showLoadingProgress(true,this);
+
         ButterKnife.bind(this);
 
 
         smsAdapter = new SmsAdapter(this);
         smsRecycler.setLayoutManager(new LinearLayoutManager(this));
 
-
-        smsPresenter.setView(this);
         if (checkReadSmsPermission())
-            readMessage();
+            smsPresenter.setView(this);
         else
             requestPermissions();
-        smsAdapter.setItems(smsList);
+
         smsRecycler.setAdapter(smsAdapter);
 
 
@@ -66,21 +74,13 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (cursor != null)
-            cursor.close();
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case 1: {
 
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    //   readMessages();
+                    smsPresenter.setView(SmsActivity.this);
 
                 } else {
                     Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT).show();
@@ -92,59 +92,18 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
         }
     }
 
-    public void readMessages(View v) {
-
-        textPermission.setVisibility(View.GONE);
-        cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            cursor.getColumnCount();
-            do {
-                String body = "";
-                body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
-                boolean isMatchFound = SmsBodyParser.isMatchFind(body);
-                if (isMatchFound) {
-                    SmsModel sms = new SmsModel();
-                    sms.setId(cursor.getString(cursor.getColumnIndexOrThrow("address")));
-                    sms.setReceivedTime(cursor.getString(cursor.getColumnIndexOrThrow("date")));
-                    sms.setAmount(SmsBodyParser.getAmount(body));
-                    sms.setCard_number(SmsBodyParser.getCard(body));
-                    sms.setTransactionTime(SmsBodyParser.getTransactionTime(body));
-                    smsList.add(sms);
-
-
-                }
-            } while (cursor.moveToNext());
-        } else {
-            Log.e(getClass().toString(), "Cursor Loading Failed");
-        }
-    }
-
-    public void readMessage() {
-
-        cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            cursor.getColumnCount();
-            do {
-                String body = "";
-                body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
-                boolean isMatchFound = SmsBodyParser.isMatchFind(body);
-                if (isMatchFound) {
-                    SmsModel sms = new SmsModel();
-                    sms.setId(cursor.getString(cursor.getColumnIndexOrThrow("address")));
-                    sms.setReceivedTime(cursor.getString(cursor.getColumnIndexOrThrow("date")));
-                    sms.setAmount(SmsBodyParser.getAmount(body));
-                    sms.setCard_number(SmsBodyParser.getCard(body));
-                    sms.setTransactionTime(SmsBodyParser.getTransactionTime(body));
-                    smsList.add(sms);
-
-
-                }
-            } while (cursor.moveToNext());
-        } else {
-            Log.e(getClass().toString(), "Cursor Loading Failed");
-        }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuItem item = menu.add("Refresh Messages");
+        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Util.showLoadingProgress(true,SmsActivity.this);
+                smsPresenter.setView(SmsActivity.this);
+                return true;
+            }
+        });
+        return true;
     }
 
     private void requestPermissions() {
@@ -155,8 +114,21 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
 
     @Override
-    public void displayMessages() {
+    public void displayMessages(List<SmsModel> smsModelList) {
+        textPermission.setVisibility(View.VISIBLE);
+        smsAdapter.setItems(smsModelList);
+        this.smsAdapter.notifyDataSetChanged();
 
+    }
+
+    @Override
+    public void loadingMessages() {
+      //  Util.showLoadingProgress(true, this);
+    }
+
+    @Override
+    public void cancelLoading() {
+        Util.showLoadingProgress(false, this);
     }
 
     private boolean checkReadSmsPermission() {
