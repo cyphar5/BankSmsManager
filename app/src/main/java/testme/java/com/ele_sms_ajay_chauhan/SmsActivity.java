@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -19,18 +21,21 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import testme.java.com.ele_sms_ajay_chauhan.adapter.SmsAdapter;
 import testme.java.com.ele_sms_ajay_chauhan.model.SmsModel;
 import testme.java.com.ele_sms_ajay_chauhan.utility.SmsBodyParser;
-import testme.java.com.ele_sms_ajay_chauhan.utility.Util;
 
 public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
-    @BindView(R.id.text)
-    TextView textView;
+    @BindView(R.id.sms_recycler)
+    RecyclerView smsRecycler;
+    @BindView(R.id.text_permission)
+    TextView textPermission;
 
     private Cursor cursor;
     private List<SmsModel> smsList = new LinkedList<>();
     private SmsPresenter smsPresenter = new SmsPresenter();
+    private SmsAdapter smsAdapter;
 
 
     @Override
@@ -39,8 +44,19 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
         setContentView(R.layout.activity_sms);
         ButterKnife.bind(this);
 
+
+        smsAdapter = new SmsAdapter(this);
+        smsRecycler.setLayoutManager(new LinearLayoutManager(this));
+
+
         smsPresenter.setView(this);
-        requestPermissions();
+        if (checkReadSmsPermission())
+            readMessage();
+        else
+            requestPermissions();
+        smsAdapter.setItems(smsList);
+        smsRecycler.setAdapter(smsAdapter);
+
 
     }
 
@@ -67,8 +83,9 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
                     //   readMessages();
 
                 } else {
-                    textView.setText(getString(R.string.permission_denied));
                     Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT).show();
+                    textPermission.setVisibility(View.VISIBLE);
+                    textPermission.setText(getString(R.string.permission_denied));
                 }
             }
 
@@ -76,6 +93,34 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
     }
 
     public void readMessages(View v) {
+
+        textPermission.setVisibility(View.GONE);
+        cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            cursor.getColumnCount();
+            do {
+                String body = "";
+                body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
+                boolean isMatchFound = SmsBodyParser.isMatchFind(body);
+                if (isMatchFound) {
+                    SmsModel sms = new SmsModel();
+                    sms.setId(cursor.getString(cursor.getColumnIndexOrThrow("address")));
+                    sms.setReceivedTime(cursor.getString(cursor.getColumnIndexOrThrow("date")));
+                    sms.setAmount(SmsBodyParser.getAmount(body));
+                    sms.setCard_number(SmsBodyParser.getCard(body));
+                    sms.setTransactionTime(SmsBodyParser.getTransactionTime(body));
+                    smsList.add(sms);
+
+
+                }
+            } while (cursor.moveToNext());
+        } else {
+            Log.e(getClass().toString(), "Cursor Loading Failed");
+        }
+    }
+
+    public void readMessage() {
 
         cursor = getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
 
@@ -91,6 +136,8 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
                     sms.setReceivedTime(cursor.getString(cursor.getColumnIndexOrThrow("date")));
                     sms.setAmount(SmsBodyParser.getAmount(body));
                     sms.setCard_number(SmsBodyParser.getCard(body));
+                    sms.setTransactionTime(SmsBodyParser.getTransactionTime(body));
+                    smsList.add(sms);
 
 
                 }
@@ -110,5 +157,11 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
     @Override
     public void displayMessages() {
 
+    }
+
+    private boolean checkReadSmsPermission() {
+        String permission = Manifest.permission.READ_SMS;
+        int res = this.checkCallingOrSelfPermission(permission);
+        return (res == PackageManager.PERMISSION_GRANTED);
     }
 }

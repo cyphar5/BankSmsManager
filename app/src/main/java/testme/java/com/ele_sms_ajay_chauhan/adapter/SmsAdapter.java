@@ -1,6 +1,7 @@
 package testme.java.com.ele_sms_ajay_chauhan.adapter;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import java.util.List;
 
 import testme.java.com.ele_sms_ajay_chauhan.R;
 import testme.java.com.ele_sms_ajay_chauhan.model.SmsModel;
+import testme.java.com.ele_sms_ajay_chauhan.utility.Util;
 
 /**
  * Created by achau on 02-03-2018.
@@ -38,8 +40,8 @@ public class SmsAdapter extends RecyclerView.Adapter<SmsAdapter.SmsViewHolder> {
 
     @Override
     public void onBindViewHolder(SmsAdapter.SmsViewHolder holder, int position) {
-        SmsModel sms = smsList.get(position);
-        holder.setSmsData(sms);
+        SmsModel sms = smsList.get(smsList.size()-position-1);
+        holder.setSmsData(sms, position + 1);
     }
 
     @Override
@@ -63,13 +65,22 @@ public class SmsAdapter extends RecyclerView.Adapter<SmsAdapter.SmsViewHolder> {
             receivedDateTime = itemView.findViewById(R.id.sa_received_time);
         }
 
-        private void setSmsData(SmsModel smsModel) {
-            sNo.setText(count++);
+        private void setSmsData(SmsModel smsModel, int index) {
+            sNo.setText("" + index+".");
             id.setText(smsModel.getId());
             cardNo.setText(smsModel.getCard_number());
             amount.setText(smsModel.getAmount());
             transactionTime.setText(smsModel.getTransactionTime());
-            receivedDateTime.setText(smsModel.getReceivedTime());
+            receivedDateTime.setText(Util.timeStampToDateTime(Long.parseLong(smsModel.getReceivedTime())));
+        }
+
+    }
+
+    public void setItems(List<SmsModel> items) {
+        if (items != null) {
+            smsList.clear();
+            smsList.addAll(items);
+            notifyDataSetChanged();
         }
     }
 
