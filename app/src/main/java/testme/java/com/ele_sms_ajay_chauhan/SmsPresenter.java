@@ -5,10 +5,13 @@ import android.content.Context;
 
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import testme.java.com.ele_sms_ajay_chauhan.model.SmsModel;
+import testme.java.com.ele_sms_ajay_chauhan.utility.Util;
 
 /**
  * Created by achau on 01-03-2018.
@@ -19,12 +22,10 @@ public class SmsPresenter implements SmsMvpPresenter {
     private SmsMvpView smsMvpView;
     private SmsMvpView view;
     private Disposable fetchSmsData;
-    private SmsListInteractor smsInteractor;
     private Context context;
 
     public SmsPresenter(Context context) {
         this.context = context;
-        smsInteractor = new SmsListInteractorImpl(context);
     }
 
     @Override
@@ -36,8 +37,8 @@ public class SmsPresenter implements SmsMvpPresenter {
     @Override
     public void fetchTransactionMessage() {
         showLoading();
-        fetchSmsData = smsInteractor.fetchMovies()
-                .subscribeOn(Schedulers.io())
+        Observable.just(Util.movieFetcher(context))
+                .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::showMessages);
 

@@ -1,6 +1,7 @@
 package testme.java.com.ele_sms_ajay_chauhan;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -26,6 +27,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import testme.java.com.ele_sms_ajay_chauhan.adapter.SmsAdapter;
 import testme.java.com.ele_sms_ajay_chauhan.model.SmsModel;
+import testme.java.com.ele_sms_ajay_chauhan.utility.SmsBodyParser;
 import testme.java.com.ele_sms_ajay_chauhan.utility.Util;
 
 public class SmsActivity extends AppCompatActivity implements SmsMvpView {
@@ -35,7 +37,6 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
     @BindView(R.id.text_permission)
     TextView textPermission;
 
-    //private Cursor cursor;
     private SmsPresenter smsPresenter;
     private SmsAdapter smsAdapter;
 
@@ -50,10 +51,7 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sms);
 
-        Util.showLoadingProgress(true,this);
-
         ButterKnife.bind(this);
-
 
         smsAdapter = new SmsAdapter(this);
         smsRecycler.setLayoutManager(new LinearLayoutManager(this));
@@ -94,16 +92,16 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuItem item = menu.add("Refresh Messages");
-        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                Util.showLoadingProgress(true,SmsActivity.this);
-                smsPresenter.setView(SmsActivity.this);
-                return true;
-            }
-        });
-        return true;
+//        MenuItem item = menu.add("Refresh Messages");
+//        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+//            @Override
+//            public boolean onMenuItemClick(MenuItem item) {
+//                Util.showLoadingProgress(true, SmsActivity.this);
+//                smsPresenter.setView(SmsActivity.this);
+//                return true;
+//            }
+//        });
+       return false;
     }
 
     private void requestPermissions() {
@@ -123,12 +121,12 @@ public class SmsActivity extends AppCompatActivity implements SmsMvpView {
 
     @Override
     public void loadingMessages() {
-      //  Util.showLoadingProgress(true, this);
+        //  Util.showLoadingProgress(true, this);
     }
 
     @Override
     public void cancelLoading() {
-        Util.showLoadingProgress(false, this);
+       // Util.showLoadingProgress(false, this);
     }
 
     private boolean checkReadSmsPermission() {

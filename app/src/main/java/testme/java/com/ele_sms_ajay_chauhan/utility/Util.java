@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import java.text.SimpleDateFormat;
@@ -32,7 +33,6 @@ public class Util {
     }
 
     public static List<SmsModel> movieFetcher(Context context) {
-
         List<SmsModel> smsList = new LinkedList<>();
         if (cursor == null)
             cursor = context.getContentResolver().query(Uri.parse("content://sms/inbox"), null, null, null, null);
